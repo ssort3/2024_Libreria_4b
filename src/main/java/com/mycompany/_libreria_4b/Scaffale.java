@@ -5,10 +5,17 @@
 package com.mycompany._libreria_4b;
 
 import eccezioni.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import utilita.Ordinatore;
+import utilita.TextFile;
 
 /**
  *
@@ -306,8 +313,59 @@ public class Scaffale implements Serializable
         
     }
     
+    public void esportaCSV(String nomeFileCSV) throws IOException, EccezioneRipianoNonValido, EccezionePosizioneNonValida, EccezionePosizioneVuota, FileException
+    {
+        String datiVolume;
+        for(int i=0;i<this.getNumRipiani();i++)
+        {
+            for(int j=0;j<this.getNumMaxLibri(i);j++)
+            {
+                TextFile f1=new TextFile(nomeFileCSV,'W'); //Apro ill file in scrittura
+                Libro lib=this.getLibro(i, j);
+                datiVolume=i+";"+j+";"+lib.getTitolo()+";"+lib.getAutore()+";"+lib.getNumeroPagine();
+                f1.toFile(datiVolume);
+            }
+        }
+    }
+    
+    public void importaCSV(String nomeFileCSV) throws IOException, FileException, EccezioneRipianoNonValido, EccezionePosizioneNonValida, EccezionePosizioneOccupata
+    {
+        TextFile f1=new TextFile(nomeFileCSV,'R');
+        String rigaLetta;
+        String[] datiVolume;
+        rigaLetta=f1.fromFile();
+        datiVolume=rigaLetta.split(";");
+        int ripiano=Integer.parseInt(datiVolume[0]);
+        int posizione=Integer.parseInt(datiVolume[1]);
+        String titolo=datiVolume[2];
+        String autore=datiVolume[3];
+        int numeroPagine=Integer.parseInt(datiVolume[4]);
+        Libro lib=new Libro(titolo,autore,numeroPagine);
+        this.setLibro(lib, ripiano, posizione);
+        
+    }
     
     
+    
+    public void serializza(String nomeFileBinario) throws FileNotFoundException, IOException
+    {
+        ObjectOutputStream writer=new ObjectOutputStream(new FileOutputStream(nomeFileBinario));
+        writer.writeObject(this);
+        writer.flush();
+        writer.close();
+        System.out.println("Salvataggio avvenuto correttamente");
+    }
+    
+    public Scaffale deserializza(String nomeFileBinario) throws FileNotFoundException, IOException, ClassNotFoundException
+    {
+        ObjectInputStream reader=new ObjectInputStream(new FileInputStream(nomeFileBinario));
+        Scaffale s=(Scaffale)reader.readObject();
+        reader.close();
+        System.out.println("Caricamento effettuato correttamente");
+        return s;
+    }
+    
+    @Override
     public String toString()
     {
         String s="";
